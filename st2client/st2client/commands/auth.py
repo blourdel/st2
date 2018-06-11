@@ -140,6 +140,7 @@ class LoginCommand(resource.ResourceCommand):
 
         with open(config_file, 'w') as cfg_file_out:
             config.write(cfg_file_out)
+        os.chmod(config_file, mode=0o660)
 
         return manager
 

@@ -20,6 +20,7 @@ Module for parsing CLI config file.
 from __future__ import absolute_import
 
 import os
+import warnings
 
 from collections import defaultdict
 
@@ -137,6 +138,20 @@ class CLIConfigParser(object):
         if not os.path.isfile(self.config_file_path):
             # Config doesn't exist, return the default values
             return CONFIG_DEFAULT_VALUES
+
+        config_dir_path = os.path.dirname(self.config_file_path)
+
+        if bool(os.stat(config_dir_path).st_mode ^ 0o770):
+            warnings.warn('Setting StackStorm config directory permissions '
+                          '(%s) to 0770' % config_dir_path)
+            os.chmod(config_dir_path, 0o770)
+            if not bool(os.stat(config_dir_path).st_mode ^ 0o770):
+                raise ValueError('Unable to set config directory permssions')
+
+        if bool(os.stat(self.config_file_path).st_mode ^ 0o660):
+            warnings.warn('Setting StackStorm config file permissions (%s) '
+                          'to 0660' % self.config_file_path)
+            os.chmod(self.config_file_path, 0o660)
 
         config = ConfigParser()
         with io.open(self.config_file_path, 'r', encoding='utf8') as fp:

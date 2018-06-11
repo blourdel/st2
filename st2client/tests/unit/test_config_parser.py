@@ -16,6 +16,8 @@
 
 from __future__ import absolute_import
 import os
+import shutil
+import warnings
 
 import six
 import unittest2
@@ -36,6 +38,44 @@ class CLIConfigParserTestCase(unittest2.TestCase):
 
         self.assertRaises(ValueError, CLIConfigParser, config_file_path='doestnotexist',
                           validate_config_exists=True)
+
+    def test_fix_permssions_on_existing_config(self):
+        TEMP_FILE_PATH = os.path.join('st2config', '.st2', 'config')
+        TEMP_CONFIG_DIR = os.path.dirname(TEMP_FILE_PATH)
+
+        self.assertFalse(os.path.exists(TEMP_CONFIG_DIR))
+
+        try:
+            os.makedirs(TEMP_CONFIG_DIR)
+
+            shutil.copyfile(CONFIG_FILE_PATH_FULL, TEMP_FILE_PATH)
+
+            self.assertNotEqual(os.stat(TEMP_FILE_PATH).st_mode & 0o777, 0o770)
+
+            parser = CLIConfigParser(config_file_path=TEMP_FILE_PATH, validate_config_exists=True)
+
+            with warnings.catch_warnings(record=True) as warnings_list:
+                result = parser.parse()
+
+                self.assertEquals(
+                    "Setting StackStorm config directory permissions ({}) to 0770".format(TEMP_CONFIG_DIR),
+                    str(warnings_list[0].message))
+
+                self.assertEqual(
+                    "Setting StackStorm config file permissions ({}) to 0660".format(TEMP_FILE_PATH),
+                    str(warnings_list[1].message))
+
+            self.assertTrue(os.path.exists(TEMP_FILE_PATH))
+            self.assertEqual(os.stat(TEMP_FILE_PATH).st_mode & 0o777, 0o660)
+
+            self.assertTrue(os.path.exists(TEMP_CONFIG_DIR))
+            self.assertEqual(os.stat(TEMP_CONFIG_DIR).st_mode & 0o777, 0o770)
+        finally:
+            if os.path.exists(TEMP_FILE_PATH):
+                os.remove(TEMP_FILE_PATH)
+                os.removedirs(TEMP_CONFIG_DIR)
+
+            self.assertFalse(os.path.exists(TEMP_FILE_PATH))
 
     def test_parse(self):
         # File doesn't exist

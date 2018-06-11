@@ -175,6 +175,9 @@ class TestLoginIntPwdAndConfig(TestLoginBase):
         }
         requests.post.assert_called_with('http://127.0.0.1:9100/tokens', '{}', **expected_kwargs)
 
+        # Check file permissions
+        self.assertEqual(os.stat(self.CONFIG_FILE).st_mode & 0o777, 0o660)
+
         with open(self.CONFIG_FILE, 'r') as config_file:
             for line in config_file.readlines():
                 # Make sure certain values are not present
