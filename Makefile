@@ -61,7 +61,7 @@ ifndef PIP_OPTIONS
 endif
 
 ifneq ($(INCLUDE_TESTS_IN_COVERAGE),)
-	NOSE_COVERAGE_FLAGS += --cover-tests
+	NOSE_COVERAGE_FLAGS += --attr '!coverage-issues' --cover-tests
 	NOSE_COVERAGE_PACKAGES := $(NOSE_COVERAGE_PACKAGES),$(COMPONENTS_TEST_MODULES_COMMA)
 endif
 

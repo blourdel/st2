@@ -19,6 +19,8 @@ import mock
 import os
 import tempfile
 
+from nose.plugins.attrib import attr
+
 from st2common.bootstrap import actionsregistrar
 from st2common.bootstrap import runnersregistrar
 
@@ -73,6 +75,7 @@ PACKS = [
 USERNAME = 'stanley'
 
 
+@attr('coverage-issues')
 @mock.patch.object(
     CUDPublisher,
     'publish_update',
